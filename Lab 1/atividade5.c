@@ -8,14 +8,14 @@
 #define COLOR_RESET "\x1b[0m"
 
 #define NTHREADS 2
-#define TAM 10000
+#define TAM 10
 
 typedef struct {
 	int vetor[TAM];
-	int id_thread[NTHREADS]; // identificador local de cada thread
 	int inicio;
 	int fim;
-} args;
+	int id_thread[NTHREADS]; // identificador local de cada thread
+} Args;
 
 
 void preenche_vetor(int *vet) {
@@ -30,15 +30,17 @@ void imprime_vetor(int *vet) {
 	printf("\n");
 }
 
-void *eleva_quadrado(int *vet, int inicio, int fim, void *id_thread) {
-	int id = * (int *) id_thread;
+void *eleva_quadrado(void *arg) {
+	
+	Args *elemento = (Args *) arg;
+	int id = *elemento->id_thread;
 	if (id == 1) {
-		for (int i = inicio ; i <= fim / 2 ; i++)
-			vet[i] = vet[i] * vet[i];
+		for (int i = elemento->inicio ; i <= elemento->fim / 2 ; i++)
+			elemento->vetor[i] = elemento->vetor[i] * elemento->vetor[i];
 	}
 	else if (id == 2) {
-		for (int i = fim / 2 + 1 ; i <= fim ; i++)
-			vet[i] = vet[i] * vet[i];
+		for (int i = elemento->fim / 2 + 1 ; i <= elemento->fim ; i++)
+			elemento->vetor[i] = elemento->vetor[i] * elemento->vetor[i];
 	}
 
 	pthread_exit(NULL);
@@ -46,6 +48,7 @@ void *eleva_quadrado(int *vet, int inicio, int fim, void *id_thread) {
 
 int verifica_valores(int *vet) {
 	for (int i = 0 ; i < TAM ; i++) {
+		printf("eae vetor[i] = %d\n", vet[i]);
 		if (vet[i] != i * i)
 			return 0; // o vetor esta errado
 	}
@@ -55,19 +58,21 @@ int verifica_valores(int *vet) {
 
 int main() {
 	pthread_t tids_sistema[NTHREADS]; // identificadores das threads no sistema
-	int id_thread[NTHREADS]; // identificador local de cada thread
-	int vetor[TAM];
-	preenche_vetor(vetor);
+	// int id_thread[NTHREADS]; // identificador local de cada thread
+	// int vetor[TAM];
+	// preenche_vetor(vetor);
+	Args elemento;
+	preenche_vetor(elemento.vetor);
 	
 	for (int i = 0 ; i < NTHREADS ; i++) {
-		id_thread[i] = i;
-		if (pthread_create(&tids_sistema[i], NULL, eleva_quadrado, (void *) &id_thread[i])) {
+		elemento.id_thread[i] = i;
+		if (pthread_create(&tids_sistema[i], NULL, eleva_quadrado, (void *) &elemento)) {
 			printf(COLOR_BOLD_RED "Erro na funcao pthread_create()\n" COLOR_RESET);
 			exit(1);
 		}
 	}
 
-	if (verifica_valores(vetor))
+	if (verifica_valores(elemento.vetor))
 		printf(COLOR_BOLD_BLUE "O vetor final esta correto\n" COLOR_RESET);
 	else
 		printf(COLOR_BOLD_RED "O vetor final esta errado\n" COLOR_RESET);
