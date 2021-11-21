@@ -10,52 +10,44 @@
 #define NTHREADS 2
 #define TAM 10
 
-typedef struct {
-	int vetor[TAM];
-	int inicio;
-	int fim;
-	int id_thread[NTHREADS]; // identificador local de cada thread
-} Args;
-
+int vetor[TAM]; // variavel global do vetor
 
 void preenche_vetor(int *vet) {
 	for (int i = 0 ; i < TAM ; i++)
 		vet[i] = i;
 }
 
-void imprime_vetor(int *vet) {
-	for (int i = 0 ; i < TAM ; i++) {
-		printf("%d ", vet[i]);	
-	}
-	printf("\n");
-}
-
 void *eleva_quadrado(void *arg) {
-	Args *elemento = (Args *) arg;
-	int id = *elemento->id_thread;
+	int id = * (int *) arg;
+
+	printf("id da thread na funcao: %d\n", id);
+	
 	if (id == 1) {
-		elemento->inicio = 0;
-		elemento->fim = TAM / 2;
+		int inicio = 0;
+		int fim = TAM / 2;
 		// realiza as operacoes na primeira metade do vetor
-		for (int i = elemento->inicio ; i <= elemento->fim ; i++)
-			elemento->vetor[i] = elemento->vetor[i] * elemento->vetor[i];
+		for (int i = inicio ; i <= fim ; i++) {
+			vetor[i] = vetor[i] * vetor[i];
+		}
 	}
 	else if (id == 2) {
-		elemento->inicio = TAM / 2 + 1;
-		elemento->fim = TAM;
+		int inicio = TAM / 2 + 1;
+		int fim = TAM;
 		// realiza as operacoes na segunda metade do vetor
-		for (int i = elemento->inicio ; i < elemento->fim ; i++)
-			elemento->vetor[i] = elemento->vetor[i] * elemento->vetor[i];
+		for (int i = inicio ; i < fim ; i++) {
+			vetor[i] = vetor[i] * vetor[i];
+		}
 	}
-
 	pthread_exit(NULL);
 }
 
 int verifica_valores(int *vet) {
 	for (int i = 0 ; i < TAM ; i++) {
 		printf("eae vetor[i] = %d\n", vet[i]);
-		if (vet[i] != i * i)
+		if (vet[i] != i * i) {
+			// printf("Erro na posicao %d   |   Valor atual: %d   |   Valor esperado: %d\n", i, vet[i], i * i);
 			return 0; // o vetor esta errado
+		}
 	}
 	return 1; // o vetor esta correto
 }
@@ -63,21 +55,28 @@ int verifica_valores(int *vet) {
 
 int main() {
 	pthread_t tids_sistema[NTHREADS]; // identificadores das threads no sistema
-	// int id_thread[NTHREADS]; // identificador local de cada thread
-	// int vetor[TAM];
-	// preenche_vetor(vetor);
-	Args elemento;
-	preenche_vetor(elemento.vetor);
+	int id_thread[NTHREADS]; // identificador local de cada thread
+	preenche_vetor(vetor);
 	
 	for (int i = 0 ; i < NTHREADS ; i++) {
-		elemento.id_thread[i] = i;
-		if (pthread_create(&tids_sistema[i], NULL, eleva_quadrado, (void *) &elemento)) {
+		id_thread[i] = i + 1;
+
+		// cria nova thread
+		if (pthread_create(&tids_sistema[i], NULL, eleva_quadrado, (void *) &id_thread)) {
 			printf(COLOR_BOLD_RED "Erro na funcao pthread_create()\n" COLOR_RESET);
 			exit(1);
 		}
 	}
 
-	if (verifica_valores(elemento.vetor))
+	// faz com que o fluxo principal espere o fim das threads criadas
+	for (int i = 0 ; i < NTHREADS ; i++) {
+		if (pthread_join(tids_sistema[i], NULL)) {
+			printf(COLOR_BOLD_RED "Erro na funcao pthread_join()\n" COLOR_RESET);
+			exit(1);
+		}
+	}
+
+	if (verifica_valores(vetor))
 		printf(COLOR_BOLD_BLUE "O vetor final esta correto\n" COLOR_RESET);
 	else
 		printf(COLOR_BOLD_RED "O vetor final esta errado\n" COLOR_RESET);
