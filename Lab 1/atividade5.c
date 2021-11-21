@@ -31,15 +31,20 @@ void imprime_vetor(int *vet) {
 }
 
 void *eleva_quadrado(void *arg) {
-	
 	Args *elemento = (Args *) arg;
 	int id = *elemento->id_thread;
 	if (id == 1) {
-		for (int i = elemento->inicio ; i <= elemento->fim / 2 ; i++)
+		elemento->inicio = 0;
+		elemento->fim = TAM / 2;
+		// realiza as operacoes na primeira metade do vetor
+		for (int i = elemento->inicio ; i <= elemento->fim ; i++)
 			elemento->vetor[i] = elemento->vetor[i] * elemento->vetor[i];
 	}
 	else if (id == 2) {
-		for (int i = elemento->fim / 2 + 1 ; i <= elemento->fim ; i++)
+		elemento->inicio = TAM / 2 + 1;
+		elemento->fim = TAM;
+		// realiza as operacoes na segunda metade do vetor
+		for (int i = elemento->inicio ; i < elemento->fim ; i++)
 			elemento->vetor[i] = elemento->vetor[i] * elemento->vetor[i];
 	}
 
@@ -77,6 +82,6 @@ int main() {
 	else
 		printf(COLOR_BOLD_RED "O vetor final esta errado\n" COLOR_RESET);
 
-	pthread_exit(NULL);
+	pthread_exit(NULL); // desvincula o fim da main do fim das threads
 	return 0;
 }
