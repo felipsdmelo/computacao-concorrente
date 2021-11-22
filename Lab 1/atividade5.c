@@ -19,8 +19,6 @@ void preenche_vetor(int *vet) {
 
 void *eleva_quadrado(void *arg) {
 	int id = * (int *) arg;
-
-	printf("id da thread na funcao: %d\n", id);
 	
 	// realiza as operacoes na primeira metade do vetor
 	if (id == 1) {
