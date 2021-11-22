@@ -8,7 +8,7 @@
 #define COLOR_RESET "\x1b[0m"
 
 #define NTHREADS 2
-#define TAM 10
+#define TAM 10000
 
 int vetor[TAM]; // variavel global do vetor
 
@@ -22,18 +22,18 @@ void *eleva_quadrado(void *arg) {
 
 	printf("id da thread na funcao: %d\n", id);
 	
+	// realiza as operacoes na primeira metade do vetor
 	if (id == 1) {
 		int inicio = 0;
-		int fim = TAM / 2;
-		// realiza as operacoes na primeira metade do vetor
+		int fim = TAM / 2; // armazena a parte inteira do quociente
 		for (int i = inicio ; i <= fim ; i++) {
 			vetor[i] = vetor[i] * vetor[i];
 		}
 	}
+	// realiza as operacoes na segunda metade do vetor
 	else if (id == 2) {
 		int inicio = TAM / 2 + 1;
 		int fim = TAM;
-		// realiza as operacoes na segunda metade do vetor
 		for (int i = inicio ; i < fim ; i++) {
 			vetor[i] = vetor[i] * vetor[i];
 		}
@@ -43,9 +43,8 @@ void *eleva_quadrado(void *arg) {
 
 int verifica_valores(int *vet) {
 	for (int i = 0 ; i < TAM ; i++) {
-		printf("eae vetor[i] = %d\n", vet[i]);
 		if (vet[i] != i * i) {
-			// printf("Erro na posicao %d   |   Valor atual: %d   |   Valor esperado: %d\n", i, vet[i], i * i);
+			printf("Erro na posicao %d   |   Valor atual: %d   |   Valor esperado: %d\n", i, vet[i], i * i);
 			return 0; // o vetor esta errado
 		}
 	}
@@ -62,7 +61,7 @@ int main() {
 		id_thread[i] = i + 1;
 
 		// cria nova thread
-		if (pthread_create(&tids_sistema[i], NULL, eleva_quadrado, (void *) &id_thread)) {
+		if (pthread_create(&tids_sistema[i], NULL, eleva_quadrado, (void *) &id_thread[i])) {
 			printf(COLOR_BOLD_RED "Erro na funcao pthread_create()\n" COLOR_RESET);
 			exit(1);
 		}
