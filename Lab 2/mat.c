@@ -53,16 +53,34 @@ int main(int argc, char *argv[]) {
     
     // aloca e preenche a primeira matriz
     matriz_1 = (int **) malloc(dimensao * sizeof(int*));
-    for (int i = 0 ; i < dimensao ; i++)
-        matriz_1[i] = (int *) malloc(dimensao * sizeof(int*));
+    if (matriz_1 == NULL) {
+        printf(COLOR_BOLD_RED "Erro ao alocar primeira matriz\n" COLOR_RESET);
+        exit(1);
+    }
+    for (int i = 0 ; i < dimensao ; i++) {
+        matriz_1[i] = (int *) malloc(dimensao * sizeof(int*)); 
+        if (matriz_1[i] == NULL) {
+            printf(COLOR_BOLD_RED "Erro ao alocar primeira matriz\n" COLOR_RESET);
+            exit(1);
+        }
+    }
     preenche_matriz(matriz_1);
 
     sleep(1); // pausa a execucao para gerar matrizes diferentes
 
     // aloca e preenche a segunda matriz
     matriz_2 = (int **) malloc(dimensao * sizeof(int*));
-    for (int i = 0 ; i < dimensao ; i++)
+    if (matriz_2 == NULL) {
+        printf(COLOR_BOLD_RED "Erro ao alocar segunda matriz\n" COLOR_RESET);
+        exit(1);
+    }
+    for (int i = 0 ; i < dimensao ; i++) {
         matriz_2[i] = (int *) malloc(dimensao * sizeof(int*));
+        if (matriz_2[i] == NULL) {
+            printf(COLOR_BOLD_RED "Erro ao alocar segunda matriz\n" COLOR_RESET);
+            exit(1);
+        }
+    }
     preenche_matriz(matriz_2);
 
     // pthread_t tids_sistema[NTHREADS];
