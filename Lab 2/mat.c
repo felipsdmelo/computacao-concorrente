@@ -16,9 +16,7 @@ typedef struct {
 } Args;
 
 int dimensao, n_threads;
-int **matriz_1;
-int **matriz_2;
-int **saida;
+int **matriz_1, **matriz_2, **saida, **saida_sequencial; 
 
 // preenche matriz com numeros aleatorios
 void preenche_matriz(int **mat) {
@@ -33,8 +31,17 @@ void imprime_matriz(int **mat) {
     for (int i = 0 ; i < dimensao ; i++) {
         printf("["); 
         for (int j = 0 ; j < dimensao ; j++)
-            printf("%3d", mat[i][j]);
+            printf("%7d", mat[i][j]);
         printf(" ]\n"); 
+    }
+}
+
+void multiplica_matrizes_sequencialmente(int **mat_1, int **mat_2) {
+    for (int i = 0 ; i < dimensao ; i++) {
+        for (int j = 0 ; j < dimensao ; j++) {
+            for (int k = 0 ; k < dimensao ; k++)
+                saida_sequencial[i][j] += mat_1[i][k] * mat_2[k][j];
+        }
     }
 }
 
@@ -47,6 +54,18 @@ void *multiplica_matrizes(void *arg) {
         }
     }
     pthread_exit(NULL);
+}
+
+int teste(int **mat_1, int **mat_2) {
+    for (int i = 0 ; i < dimensao ; i++) {
+        for (int j = 0 ; j < dimensao ; j++) {
+            if (mat_1[i][j] != mat_2[i][j]) {
+                printf("Erro na posicao [%d][%d]\n", i, j);
+                return 0; // as matrizes nao sao iguais
+            }
+        }
+    }
+    return 1; // as matrizes sao iguais
 }
 
 int main(int argc, char *argv[]) {
@@ -111,9 +130,6 @@ int main(int argc, char *argv[]) {
     pthread_t tids_sistema[n_threads];
     Args *args; // recebe os argumentos para cada thread
 
-    printf("Matriz 1:\n"); imprime_matriz(matriz_1);printf("\n\n");
-    printf("Matriz 2:\n"); imprime_matriz(matriz_2);printf("\n\n");
-
     // cria novas threads
     for (int i = 0 ; i < n_threads ; i++) {
         args = (Args *) malloc(sizeof(Args));
@@ -138,7 +154,30 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-    printf("Saida:\n"); imprime_matriz(saida);printf("\n\n");
+    saida_sequencial = (int **) malloc(dimensao * sizeof(int*));
+    if (saida_sequencial == NULL) {
+        printf(COLOR_BOLD_RED "Erro ao alocar matriz de saida sequencial\n" COLOR_RESET);
+        exit(1);
+    }
+    for (int i = 0 ; i < dimensao ; i++) {
+        saida_sequencial[i] = (int *) malloc(dimensao * sizeof(int *));
+        if (saida_sequencial[i] == NULL) {
+            printf(COLOR_BOLD_RED "Erro ao alocar matriz de saida sequencial\n" COLOR_RESET);
+            exit(1);
+        }
+    }
+    for (int i = 0 ; i < dimensao ; i++) {
+        for (int j = 0 ; j < dimensao ; j++)
+            saida_sequencial[i][j] = 0;
+    }
 
+    multiplica_matrizes_sequencialmente(matriz_1, matriz_2);
+
+    int t = teste(saida, saida_sequencial);
+    if (t) printf(COLOR_BOLD_BLUE "Sucesso\n" COLOR_RESET);
+    else printf(COLOR_BOLD_RED "Falha\n" COLOR_RESET);
+
+    free(matriz_1); free(matriz_2);
+    free(saida); free(saida_sequencial);
     return 0;
 }
