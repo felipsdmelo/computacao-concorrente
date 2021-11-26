@@ -11,13 +11,14 @@
 #define COLOR_RESET "\x1b[0m"
 
 typedef struct {
-    int id; // identificador local das trheads
+    int id; // identificador da linha que a thread vai processar
     int dim;
 } Args;
 
 int dimensao, n_threads;
 int **matriz_1;
 int **matriz_2;
+int **saida;
 
 // preenche matriz com numeros aleatorios
 void preenche_matriz(int **mat) {
@@ -38,7 +39,14 @@ void imprime_matriz(int **mat) {
 }
 
 void *multiplica_matrizes(void *arg) {
-    Args *args = (Args *) arg;
+    Args *e = (Args *) arg;
+    for (int i = e->id ; i < e->dim ; i += n_threads) {
+        for (int j = 0 ; j < e->dim ; j++) {
+            for (int k = 0 ; k < e->dim ; k++)
+                saida[i][j] += matriz_1[i][k] * matriz_2[k][j];
+        }
+    }
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
@@ -83,7 +91,54 @@ int main(int argc, char *argv[]) {
     }
     preenche_matriz(matriz_2);
 
-    // pthread_t tids_sistema[NTHREADS];
-    // int id_thread[NTHREADS]; // identificador local de cada thread
+    saida = (int **) malloc(dimensao * sizeof(int*));
+    if (saida == NULL) {
+        printf(COLOR_BOLD_RED "Erro ao alocar matriz de saida\n" COLOR_RESET);
+        exit(1);
+    }
+    for (int i = 0 ; i < dimensao ; i++) {
+        saida[i] = (int *) malloc(dimensao * sizeof(int *));
+        if (saida[i] == NULL) {
+            printf(COLOR_BOLD_RED "Erro ao alocar matriz de saida\n" COLOR_RESET);
+            exit(1);
+        }
+    }
+    for (int i = 0 ; i < dimensao ; i++) {
+        for (int j = 0 ; j < dimensao ; j++)
+            saida[i][j] = 0;
+    }
+
+    pthread_t tids_sistema[n_threads];
+    Args *args; // recebe os argumentos para cada thread
+
+    printf("Matriz 1:\n"); imprime_matriz(matriz_1);printf("\n\n");
+    printf("Matriz 2:\n"); imprime_matriz(matriz_2);printf("\n\n");
+
+    // cria novas threads
+    for (int i = 0 ; i < n_threads ; i++) {
+        args = (Args *) malloc(sizeof(Args));
+        if (args == NULL) {
+            printf(COLOR_BOLD_RED "Erro ao aolocar argumentos\n" COLOR_RESET);
+            exit(1);
+        }
+        args->id = i;
+        args->dim = dimensao;
+
+        if (pthread_create(&tids_sistema[i], NULL, multiplica_matrizes, (void *) args)) {
+            printf(COLOR_BOLD_RED "Erro ao criar thread\n" COLOR_RESET);
+            exit(1);
+        }
+    }
+
+    // faz com que o fluxo principal espere o fim das threads criadas
+	for (int i = 0 ; i < n_threads ; i++) {
+		if (pthread_join(tids_sistema[i], NULL)) {
+			printf(COLOR_BOLD_RED "Erro na funcao pthread_join()\n" COLOR_RESET);
+			exit(1);
+		}
+	}
+
+    printf("Saida:\n"); imprime_matriz(saida);printf("\n\n");
+
     return 0;
 }
