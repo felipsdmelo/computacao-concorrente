@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <pthread.h>
 
@@ -17,6 +18,15 @@ typedef struct {
 
 int dimensao, n_threads;
 int **matriz_1, **matriz_2, **saida, **saida_sequencial; 
+
+double get_time() {
+    struct timeval time;
+    if (gettimeofday(&time, NULL)) {
+        printf("Erro na funcao gettimeofday()\n");
+        return -1;
+    }
+    return (double) time.tv_sec + (double) time.tv_usec * .000001;
+}
 
 // preenche matriz com numeros aleatorios
 void preenche_matriz(int **mat) {
@@ -78,6 +88,9 @@ int main(int argc, char *argv[]) {
     if (n_threads > dimensao)
         n_threads = dimensao;
     
+    double inicio, fim;
+
+    inicio = get_time();
     // aloca e preenche a primeira matriz
     matriz_1 = (int **) malloc(dimensao * sizeof(int*));
     if (matriz_1 == NULL) {
@@ -110,6 +123,7 @@ int main(int argc, char *argv[]) {
     }
     preenche_matriz(matriz_2);
 
+    // aloca e preenche a matriz de saida
     saida = (int **) malloc(dimensao * sizeof(int*));
     if (saida == NULL) {
         printf(COLOR_BOLD_RED "Erro ao alocar matriz de saida\n" COLOR_RESET);
@@ -124,9 +138,12 @@ int main(int argc, char *argv[]) {
     }
     for (int i = 0 ; i < dimensao ; i++) {
         for (int j = 0 ; j < dimensao ; j++)
-            saida[i][j] = 0;
+            saida[i][j] = 0; // zera a matriz de saida
     }
+    fim = get_time();
+    double tempo_alocacao = fim - inicio;
 
+    inicio = get_time();
     pthread_t tids_sistema[n_threads];
     Args *args; // recebe os argumentos para cada thread
 
@@ -153,6 +170,8 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	}
+    fim = get_time();
+    double tempo_concorrente = fim - inicio;
 
     saida_sequencial = (int **) malloc(dimensao * sizeof(int*));
     if (saida_sequencial == NULL) {
@@ -170,12 +189,18 @@ int main(int argc, char *argv[]) {
         for (int j = 0 ; j < dimensao ; j++)
             saida_sequencial[i][j] = 0;
     }
-
+    inicio = get_time();
     multiplica_matrizes_sequencialmente(matriz_1, matriz_2);
+    fim = get_time();
+    double tempo_sequencial = fim - inicio;
+
+    printf("Tempo de alocacao de matrizes: %.5lf segundos\n", tempo_alocacao - 1);
+    printf("Tempo de multiplicacao sequencial: %.5lf segundos\n", tempo_sequencial);
+    printf("Tempo de multiplicacao concorrente: %.5lf segundos\n", tempo_concorrente);
 
     int t = teste(saida, saida_sequencial);
-    if (t) printf(COLOR_BOLD_BLUE "Sucesso\n" COLOR_RESET);
-    else printf(COLOR_BOLD_RED "Falha\n" COLOR_RESET);
+    if (t) printf(COLOR_BOLD_BLUE "\nSucesso\n" COLOR_RESET);
+    else printf(COLOR_BOLD_RED "\nFalha\n" COLOR_RESET);
 
     free(matriz_1); free(matriz_2);
     free(saida); free(saida_sequencial);
