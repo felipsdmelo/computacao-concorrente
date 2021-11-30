@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include "timer.h"
 #include <unistd.h>
 #include <pthread.h>
 
@@ -18,15 +19,6 @@ typedef struct {
 
 int dimensao, n_threads;
 int **matriz_1, **matriz_2, **saida, **saida_sequencial; 
-
-double get_time() {
-    struct timeval time;
-    if (gettimeofday(&time, NULL)) {
-        printf("Erro na funcao gettimeofday()\n");
-        return -1;
-    }
-    return (double) time.tv_sec + (double) time.tv_usec * .000001;
-}
 
 // preenche matriz com numeros aleatorios
 void preenche_matriz(int **mat) {
@@ -90,7 +82,7 @@ int main(int argc, char *argv[]) {
     
     double inicio, fim;
 
-    inicio = get_time();
+    GET_TIME(inicio);
     // aloca e preenche a primeira matriz
     matriz_1 = (int **) malloc(dimensao * sizeof(int*));
     if (matriz_1 == NULL) {
@@ -140,10 +132,10 @@ int main(int argc, char *argv[]) {
         for (int j = 0 ; j < dimensao ; j++)
             saida[i][j] = 0; // zera a matriz de saida
     }
-    fim = get_time();
+    GET_TIME(fim);
     double tempo_alocacao = fim - inicio;
 
-    inicio = get_time();
+    GET_TIME(inicio);
     pthread_t tids_sistema[n_threads];
     Args *args; // recebe os argumentos para cada thread
 
@@ -170,7 +162,7 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	}
-    fim = get_time();
+    GET_TIME(fim);
     double tempo_concorrente = fim - inicio;
 
     saida_sequencial = (int **) malloc(dimensao * sizeof(int*));
@@ -189,9 +181,10 @@ int main(int argc, char *argv[]) {
         for (int j = 0 ; j < dimensao ; j++)
             saida_sequencial[i][j] = 0;
     }
-    inicio = get_time();
+
+    GET_TIME(inicio);
     multiplica_matrizes_sequencialmente(matriz_1, matriz_2);
-    fim = get_time();
+    GET_TIME(fim);
     double tempo_sequencial = fim - inicio;
 
     printf("Tempo de alocacao de matrizes: %.5lf segundos\n", tempo_alocacao - 1);
@@ -199,8 +192,8 @@ int main(int argc, char *argv[]) {
     printf("Tempo de multiplicacao concorrente: %.5lf segundos\n", tempo_concorrente);
 
     int t = teste(saida, saida_sequencial);
-    if (t) printf(COLOR_BOLD_BLUE "\nSucesso\n" COLOR_RESET);
-    else printf(COLOR_BOLD_RED "\nFalha\n" COLOR_RESET);
+    if (t) printf(COLOR_BOLD_BLUE "\nSucesso\n\n" COLOR_RESET);
+    else printf(COLOR_BOLD_RED "\nFalha\n\n" COLOR_RESET);
 
     free(matriz_1); free(matriz_2);
     free(saida); free(saida_sequencial);
