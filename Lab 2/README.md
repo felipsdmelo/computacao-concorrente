@@ -2,7 +2,7 @@
   Laboratório 2
 </h1>
 
-## Todos os códigos foram compilados com o comando `gcc arquivo.c -o arquivo -Wall -lpthread`
+## O código foi compilado com o comando `gcc mat.c -o mat -Wall -lpthread`
 
 ### Tabelas de desempenho
 
