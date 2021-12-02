@@ -26,6 +26,6 @@ Número de threads | Tempo sequencial | Tempo concorrente | Aceleração média 
 
 Número de threads | Tempo sequencial | Tempo concorrente | Aceleração média |
 :---------------: | :--------------------: | :---------------------: | :--------------: |
-1 | - | - | - |
-2 | - | - | - |
-4 | - | - | - |
+1 | 0.84182 | 0.79739 | - |
+2 | 0.83707 | 0.39675 | - |
+4 | 0.83734 | 0.24600 | - |
