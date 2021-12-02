@@ -27,6 +27,19 @@ void imprime_vetor(float *vet) {
     printf("\n");
 }
 
+/**
+ * Calcula a quantidade de valores que estao entre um limite inferior
+ * inf e um superior sup em um dado vetor de forma sequencial
+ */
+long long int qtd_valores_sequencial(float *vet, float inf, float sup) {
+    long long int qtd = 0;
+    for (long long int i = 0 ; i < n ; i++) {
+        if (vet[i] > inf && vet[i] < sup)
+            qtd += 1;
+    }
+    return qtd;
+}
+
 
 int main(int argc, char *argv[]) {
     if (argc < 5) {
@@ -52,20 +65,16 @@ int main(int argc, char *argv[]) {
     GET_TIME(fim);
     double tempo_aloc = fim - inicio;
 
-
     GET_TIME(inicio);
     // realiza o algoritmo de forma sequencial
-    long long int qtd_sequencial = 0;
-    for (long long int i = 0 ; i < n ; i++) {
-        if (vetor[i] > inferior && vetor[i] < superior)
-            qtd_sequencial += 1;
-    }
+    long long int qtd_sequencial = qtd_valores_sequencial(vetor, inferior, superior);
     GET_TIME(fim);
     double tempo_seq = fim - inicio;
 
 
     printf("Tempo de alocacao e preenchimento: %.5lf\n", tempo_aloc);
-    printf("Tempo de execucao sequencial: %.5lf\n", tempo_seq);
+    printf("Tempo de execucao sequencial: %.5lf\n\n", tempo_seq);
+    printf("Quantidade sequencial: %lld\n", qtd_sequencial);
 
     free(vetor);
     return 0;
