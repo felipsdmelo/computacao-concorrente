@@ -4,6 +4,8 @@
 
 ## O código foi compilado com o comando `gcc lab3.c -o lab3 -Wall -lpthread`
 
+#### Foram utilizados números aleatórios de 0 a 1000 no vetor e a faixa de valores testados foi 0 < x < 500
+
 ### Tabelas de desempenho
 
 #### Dimensão 10⁵
