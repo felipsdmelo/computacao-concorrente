@@ -9,6 +9,9 @@ pthread_mutex_t mutex;  // variavel de exclusao mutua
 pthread_cond_t cond;    // variavel de sincronizacao
 
 void *t1 (void *arg) {
+    while (var < 4) {
+        pthread_cond_wait(&cond, &mutex);
+    }
     printf("(1) Volte sempre!\n");
     pthread_exit(NULL);
 }
@@ -20,6 +23,8 @@ void *t2 (void *arg) {
         pthread_cond_wait(&cond, &mutex);
     }
     printf("(2) Fique a vontade.\n");
+    var++;
+    pthread_cond_signal(&cond); // envia sinal para a thread 1
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
@@ -31,6 +36,8 @@ void *t3 (void *arg) {
         pthread_cond_wait(&cond, &mutex);
     }
     printf("(3) Sente-se por favor.\n");
+    var++;
+    pthread_cond_signal(&cond); // envia sinal para a thread 1
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
@@ -42,6 +49,8 @@ void *t4 (void *arg) {
         pthread_cond_wait(&cond, &mutex);
     }
     printf("(4) Aceita um copo d'agua?\n");
+    var++;
+    pthread_cond_signal(&cond); // envia sinal para a thread 1
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
@@ -50,7 +59,7 @@ void *t5 (void *arg) {
     pthread_mutex_lock(&mutex);
     printf("(5) Seja bem-vindo!\n");
     var++;
-    pthread_cond_broadcast(&cond);
+    pthread_cond_broadcast(&cond); // envia sinal para threads 2, 3 e 4
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
@@ -62,7 +71,6 @@ int main() {
         printf("Erro ao alocar os identificadores das threads do sistema\n");
         exit(1);
     }
-    // int t1 = 1, t2 = 2, t3 = 3, t4 = 4, t5 = 5;
 
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&cond, NULL);
