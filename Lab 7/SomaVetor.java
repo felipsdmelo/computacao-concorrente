@@ -16,7 +16,7 @@ class Compartilha {
         return this.soma;
     }
 
-    public void incrementaSoma(int inc) {
+    public synchronized void incrementaSoma(int inc) {
         this.soma += inc;
     }
 
