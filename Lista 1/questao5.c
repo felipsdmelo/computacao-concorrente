@@ -6,32 +6,44 @@
 #define N 1050 // limite superior que delimita ponto de parada para impressao de multiplos
 #define VALOR 100 // valor cujos multiplos queremos imprimir
 
+
 pthread_mutex_t mutex;
 pthread_cond_t cond1, cond2;
-int contador = 0;
+int contador = 0, imprime = 0, fim = 0;
 
 void *Thread1(void *arg) {
     for (int i = 0 ; i < N ; i++) {
-        pthread_mutex_lock(&mutex);
         contador++;
-        if (contador % VALOR == 0) { // verifica se contador eh multiplo de 100
-            printf("---> ");
-            pthread_cond_signal(&cond2); // envia sinal pra thread 2
-            pthread_cond_wait(&cond1, &mutex); // espera a thread 2 enviar sinal de volta
+        if(!(contador % VALOR)) {
+            pthread_mutex_lock(&mutex);
+            imprime = 1;
+            pthread_cond_signal(&cond2);
+            pthread_cond_wait(&cond1, &mutex);
+            pthread_mutex_unlock(&mutex);
         }
-        pthread_mutex_unlock(&mutex);
     }
+    pthread_mutex_lock(&mutex);
+    fim = 1;
+    pthread_cond_signal(&cond2);
+    pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
 
 void *Thread2(void *arg) {
-    while (N - contador >= VALOR) { // se (N - contador) < VALOR, entao nao ha mais multiplos para imprimir
-        pthread_cond_wait(&cond2, &mutex); // espera a thread 1 enviar o sinal
-        printf("Contador = %d\n", contador);
-        pthread_cond_signal(&cond1); // envia sinal para a thread 1 apos imprimir o valor de contador
+    pthread_mutex_lock(&mutex);
+    while (!fim) {
+        if (imprime) {
+            printf("Contador = %d\n", contador);
+            imprime = 0;
+            pthread_cond_signal(&cond1);
+        } 
+        else
+            pthread_cond_wait(&cond2, &mutex);
     }
+    pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
+
 
 int main() {
     pthread_t *tids_sistema;
