@@ -8,6 +8,7 @@
 #define COLOR_YELLOW "\e[1;33m"
 #define COLOR_RESET "\x1b[0m"
 
+// estrutura de dados para passar mais de um argumento para as threads
 typedef struct {
     int inicio;
     int fim;
@@ -92,7 +93,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0 ; i < n_threads ; i++) {
         args = (Args *) malloc(sizeof(Args));
         args->inicio = (N / n_threads) * i;
-        args->fim = (N / n_threads) * (i + 1) - 1;
+        args->fim = (N / n_threads) * (i + 1);
         if (pthread_create(&tids_sistema[i], NULL, tarefa, (void *) args)) {
             printf(COLOR_RED "Erro na funcao pthread_create()\n" COLOR_RESET);
             exit(1);
@@ -105,7 +106,7 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
     }
-    quicksort(vetor, 0, N);
+    // quicksort(vetor, 0, N);
     imprime(vetor);
 
     printf("\n");
