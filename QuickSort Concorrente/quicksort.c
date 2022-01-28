@@ -17,13 +17,13 @@ typedef struct {
 } Args;
 
 int *vetor, *vetorSeq, *auxiliar;
-long long int N;
+long long int N; // dimensao do vetor
 int N_THREADS;
 
 void preenche_vetor(int *vet) {
     srand(time(NULL));
     for (int i = 0 ; i < N ; i++)
-        vet[i] = rand() % 10000;
+        vet[i] = rand() % 10000; // 0 < x < 9999
     // int val = N - 1;
     // for (int i = 0 ; i < N ; i++) {
     //     vet[i] = val;
@@ -31,6 +31,12 @@ void preenche_vetor(int *vet) {
     // }
 }
 
+/**
+ * @brief: Imprime um vetor
+ * 
+ * @param vet: vetor que sera impresso
+ * @param msg: mensagem
+ */
 void imprime(int *vet, char msg[]) {
     printf("%s: [  ", msg);
     for (int i = 0 ; i < N ; i++) {
@@ -65,6 +71,15 @@ void imprime(int *vet, char msg[]) {
 //     free(esq); free(dir);
 // }
 
+/**
+ * @brief: Realiza o merge entre os subvetores que cada thread ordenou
+ * 
+ * @param vet: vetor que sera fundido
+ * @param vet_aux: vetor auxiliar com a mesma dimensao de vet
+ * @param inicio: posicao de inicio do vetor
+ * @param meio: posicao central do vetor
+ * @param fim: tamanho do vetor
+ */
 void merge(int *vet, int *vet_aux, int inicio, int meio, int fim) {
     long long int index_esq = inicio;
     long long int index_dir = meio;
@@ -100,8 +115,7 @@ void merge(int *vet, int *vet_aux, int inicio, int meio, int fim) {
 }
 
 /**
- * @brief: Realiza a ordenacao de um vetor utilizando o algoritmo 
- * QuickSort de forma concorrente
+ * @brief: Realiza a ordenacao de um vetor utilizando o algoritmo QuickSort
  * 
  * @param vet: vetor que sera ordenado 
  * @param inicio: posicao de inicio do vetor
@@ -130,14 +144,20 @@ void quicksort(int *vet, long long int inicio, long long int fim) {
         quicksort(vet, i, fim);
 }
 
-void verifica(int *vet) {
+/**
+ * @brief: Verifica se as ordenacoes foram realizadas de maneira correta
+ * 
+ * @param vet: vetor que sera testado
+ * @param msg: mensagem
+ */
+void verifica(int *vet, char msg[]) {
     for (int i = 0 ; i < N - 1 ; i++) {
         if (!(vet[i] <= vet[i + 1])) {
-            printf(COLOR_RED "Erro na ordenacao do vetor\n" COLOR_RESET);
+            printf(COLOR_RED "%s: Erro na ordenacao do vetor\n" COLOR_RESET, msg);
             return;
         }
     }
-    printf(COLOR_BLUE "Ordenacao feita corretamente\n" COLOR_RESET);
+    printf(COLOR_BLUE "%s: Ordenacao feita corretamente\n" COLOR_RESET, msg);
 }
 
 void *tarefa(void *_arg) {
@@ -206,6 +226,7 @@ int main(int argc, char *argv[]) {
     // funde os subvetores gerados pelas threads
     long long int tam_bloco = N / N_THREADS;
     int i;
+    // funde os subvetores em duplas
     for (i = 0 ; i < N_THREADS - 2 ; i++)
         merge(vetor, auxiliar, 0, (i + 1) * tam_bloco, (i + 1) * tam_bloco + tam_bloco);
     merge(vetor, auxiliar, 0, (i + 1) * tam_bloco, N);
@@ -213,18 +234,19 @@ int main(int argc, char *argv[]) {
     GET_TIME(fim); // tempo de execucao do merge
     double t_merge = fim - inicio;
 
-    // imprime(vetor, "Concorrente");
+    // imprime(vetor, "Concorrente ordenado");
 
     GET_TIME(inicio); // tempo de execucao do algoritmo sequencial
     quicksort(vetorSeq, 0, N);
     GET_TIME(fim); // tempo de execucao do algoritmo sequencial
     double t_sequencial = fim - inicio;
-    // imprime(vetorSeq, "Sequencial");
+    // imprime(vetorSeq, "Sequencial ordenado");
 
     printf("\n");
-    GET_TIME(inicio);
-    verifica(vetor);
-    GET_TIME(fim);
+    GET_TIME(inicio); // tempo de verificacao dos vetores
+    verifica(vetor, "Concorrente");
+    verifica(vetorSeq, "Sequencial");
+    GET_TIME(fim); // tempo de verificacao dos vetores
     double t_verificacao = fim - inicio;
 
     printf(COLOR_YELLOW "\nTempo de alocacao ----------------------------------- %.5lf seg\n", t_alocacao);
