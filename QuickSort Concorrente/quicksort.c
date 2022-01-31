@@ -224,19 +224,19 @@ int main(int argc, char *argv[]) {
 
     GET_TIME(inicio); // tempo de preenchimento
     switch (tipo_vetor) {
-            case 1:
-                preenche_vetor_aleatorio(vetor);
-                break;
-            case 2:
-                preenche_vetor_decrescente(vetor);
-                break;
-            case 3:
-                preenche_vetor_ordenado(vetor);
-                break;
-            default:
-                preenche_vetor_aleatorio(vetor);
-                tipo_vetor = 1;
-                break;
+        case 1:
+            preenche_vetor_aleatorio(vetor);
+            break;
+        case 2:
+            preenche_vetor_decrescente(vetor);
+            break;
+        case 3:
+            preenche_vetor_ordenado(vetor);
+            break;
+        default:
+            preenche_vetor_aleatorio(vetor);
+            tipo_vetor = 1;
+            break;
     }
     for (int i = 0 ; i < N ; i++)
         vetor_seq[i] = vetor[i];
