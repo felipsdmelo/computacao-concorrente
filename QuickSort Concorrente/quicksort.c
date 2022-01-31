@@ -36,7 +36,7 @@ void preenche_vetor_decrescente(int *vet) {
 void preenche_vetor_aleatorio(int *vet) {
     srand(time(NULL));
     for (int i = 0 ; i < N ; i++)
-        vet[i] = rand() % 10001; // 0 < x < 10000
+        vet[i] = rand() % 10001; // 0 <= x <= 10000
 }
 
 /**
