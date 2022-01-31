@@ -16,19 +16,27 @@ typedef struct {
     long long int fim;
 } Args;
 
-int *vetor, *vetorSeq, *auxiliar;
+int *vetor, *vetor_seq, *auxiliar;
 long long int N; // dimensao do vetor
 int N_THREADS;
 
-void preenche_vetor(int *vet) {
+void preenche_vetor_ordenado(int *vet) {
+    for (int i = 0 ; i < N ; i++)
+        vet[i] = i;
+}
+
+void preenche_vetor_decrescente(int *vet) {
+    int val = N - 1;
+    for (int i = 0 ; i < N ; i++) {
+        vet[i] = val;
+        val--;
+    }
+}
+
+void preenche_vetor_aleatorio(int *vet) {
     srand(time(NULL));
     for (int i = 0 ; i < N ; i++)
-        vet[i] = rand() % 10000; // 0 < x < 9999
-    // int val = N - 1;
-    // for (int i = 0 ; i < N ; i++) {
-    //     vet[i] = val;
-    //     val--;
-    // }
+        vet[i] = rand() % 10001; // 0 < x < 10000
 }
 
 /**
@@ -44,32 +52,6 @@ void imprime(int *vet, char msg[]) {
     }
     printf("]\n");
 }
-
-// void merge(int *vet, long long int inicio, long long int meio, long long int fim) {
-//     int *esq, *dir;
-//     esq = (int *) malloc((meio - inicio) * sizeof(int));
-//     dir = (int *) malloc((fim - meio) * sizeof(int));
-//     int index_esq = 0, index_dir = 0;
-//     for (int i = 0 ; i < fim ; i++) {
-//         if (index_esq >= meio - inicio) {
-//             vet[i] = dir[index_dir];
-//             index_dir += 1;
-//         }
-//         else if (index_dir >= fim - meio) {
-//             vet[i] = esq[index_esq];
-//             index_esq += 1;
-//         }
-//         else if (esq[index_esq] <= dir[index_dir]) {
-//             vet[i] = esq[index_esq];
-//             index_esq += 1;
-//         }
-//         else {
-//             vet[i] = dir[index_dir];
-//             index_dir += 1;
-//         }
-//     }
-//     free(esq); free(dir);
-// }
 
 /**
  * @brief: Realiza o merge entre os subvetores que cada thread ordenou
@@ -153,8 +135,8 @@ void quicksort(int *vet, long long int inicio, long long int fim) {
 void verifica(int *vet, char msg[]) {
     for (int i = 0 ; i < N - 1 ; i++) {
         if (!(vet[i] <= vet[i + 1])) {
-            printf(COLOR_RED "%s: Erro na ordenacao do vetor\n" COLOR_RESET, msg);
-            return;
+            printf(COLOR_RED "\n%s: Erro na ordenacao do vetor\n" COLOR_RESET, msg);
+            exit(1);
         }
     }
     printf(COLOR_BLUE "%s: Ordenacao feita corretamente\n" COLOR_RESET, msg);
@@ -169,32 +151,100 @@ void *tarefa(void *_arg) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        printf(COLOR_YELLOW "Execute como: %s <tamanho do vetor> <numero de threads>\n" COLOR_RESET, argv[0]);
+    if (argc < 4) {
+        printf(COLOR_YELLOW "Execute como: %s <tamanho do vetor> <numero de threads> ", argv[0]);
+        printf("<tipo de vetor>\n");
+        printf("Tipo 1: Vetor aleatorio\nTipo 2: Vetor decrescente\nTipo 3: Vetor crescente\n" COLOR_RESET);
         return 0;
     }
     N = atoll(argv[1]);
     N_THREADS = atoi(argv[2]);
+    int tipo_vetor = atoi(argv[3]);
 
     double inicio, fim;
 
+    // verificacao dos argumentos passados por linha de comando
+    if (N_THREADS == 0 || N_THREADS == 1) {
+        free(vetor); free(auxiliar);
+        GET_TIME(inicio); // tempo de alocacao
+        vetor_seq = (int *) malloc(N * sizeof(int));
+        if (vetor_seq == NULL) {
+            printf(COLOR_RED "Erro ao alocar vetor\n" COLOR_RESET);
+            exit(1);
+        }
+        GET_TIME(fim); // tempo de alocacao
+        double t_aloc = fim - inicio;
+
+        GET_TIME(inicio) // tempo de preenchimento
+        switch (tipo_vetor) {
+            case 1:
+                preenche_vetor_aleatorio(vetor_seq);
+                break;
+            case 2:
+                preenche_vetor_decrescente(vetor_seq);
+                break;
+            case 3:
+                preenche_vetor_ordenado(vetor_seq);
+                break;
+            default:
+                preenche_vetor_aleatorio(vetor_seq);
+                tipo_vetor = 1;
+                break;
+        }
+        GET_TIME(fim); // tempo de preenchimento
+        double t_preenc = fim - inicio;
+        
+        GET_TIME(inicio); // tempo de execucao do algoritmo sequencial
+        quicksort(vetor_seq, 0, N);
+        GET_TIME(fim); // tempo de execucao do algoritmo sequencial
+        double t_seq = fim - inicio;
+
+        GET_TIME(inicio); // tempo de verificacao do vetor
+        verifica(vetor_seq, "Sequencial");
+        GET_TIME(fim); // tempo de verificacao do vetor
+        double t_verifica = fim - inicio;
+
+        printf(COLOR_YELLOW "Tempo de alocacao: %.5lf seg\n", t_aloc);
+        printf("Tempo de preenchimento do vetor: %.5lf seg\n", t_preenc);
+        printf("Tempo de execucao do algoritmo: %.5lf seg\n", t_seq);
+        printf("Tempo do teste de corretude: %.5lf seg\n" COLOR_RESET, t_verifica);
+        return 0;
+    }
+
     GET_TIME(inicio); // tempo de alocacao
     vetor = (int *) malloc(N * sizeof(int));
-    vetorSeq = (int *) malloc(N * sizeof(int));
+    vetor_seq = (int *) malloc(N * sizeof(int));
     auxiliar = (int *) malloc(N * sizeof(int));
+    if (vetor == NULL || vetor_seq == NULL || auxiliar == NULL) {
+        printf(COLOR_RED "Erro ao alocar vetores\n" COLOR_RESET);
+        exit(1);
+    }
     GET_TIME(fim) // tempo de alocacao
     double t_alocacao = fim - inicio;
 
-    GET_TIME(inicio);
-    preenche_vetor(vetor);
-    for (int i = 0 ; i < N ; i++) {
-        vetorSeq[i] = vetor[i];
+    GET_TIME(inicio); // tempo de preenchimento
+    switch (tipo_vetor) {
+            case 1:
+                preenche_vetor_aleatorio(vetor);
+                break;
+            case 2:
+                preenche_vetor_decrescente(vetor);
+                break;
+            case 3:
+                preenche_vetor_ordenado(vetor);
+                break;
+            default:
+                preenche_vetor_aleatorio(vetor);
+                tipo_vetor = 1;
+                break;
     }
-    GET_TIME(fim);
+    for (int i = 0 ; i < N ; i++)
+        vetor_seq[i] = vetor[i];
+    GET_TIME(fim); // tempo de preenchimento
     double t_preenchimento = fim - inicio;
 
     // imprime(vetor, "Original Conc");
-    // imprime(vetorSeq, "Original Seq");
+    // imprime(vetor_seq, "Original Seq");
 
     GET_TIME(inicio); // tempo de execucao do algoritmo concorrente
     // cria as threads da aplicacao
@@ -221,7 +271,6 @@ int main(int argc, char *argv[]) {
     GET_TIME(fim); // tempo de execucao do algoritmo concorrente
     double t_concorrente = fim - inicio;
 
-
     GET_TIME(inicio); // tempo de execucao do merge
     // funde os subvetores gerados pelas threads
     long long int tam_bloco = N / N_THREADS;
@@ -237,15 +286,16 @@ int main(int argc, char *argv[]) {
     // imprime(vetor, "Concorrente ordenado");
 
     GET_TIME(inicio); // tempo de execucao do algoritmo sequencial
-    quicksort(vetorSeq, 0, N);
+    quicksort(vetor_seq, 0, N);
     GET_TIME(fim); // tempo de execucao do algoritmo sequencial
     double t_sequencial = fim - inicio;
-    // imprime(vetorSeq, "Sequencial ordenado");
+    // imprime(vetor_seq, "Sequencial ordenado");
 
-    printf("\n");
+    printf("---------------------------------------------------------------------\n");
+    printf("Dimensao: %lld        Numero de threads: %d        Tipo de vetor: %d\n\n", N, N_THREADS, tipo_vetor);
     GET_TIME(inicio); // tempo de verificacao dos vetores
     verifica(vetor, "Concorrente");
-    verifica(vetorSeq, "Sequencial");
+    verifica(vetor_seq, "Sequencial");
     GET_TIME(fim); // tempo de verificacao dos vetores
     double t_verificacao = fim - inicio;
 
@@ -255,11 +305,14 @@ int main(int argc, char *argv[]) {
     printf("Tempo de execucao do algoritmo concorrente: --------- %.5lf seg\n", t_concorrente + t_merge);
     printf("Tempo de execucao do algoritmo sequencial: ---------- %.5lf seg\n", t_sequencial);
     printf("Tempo do teste de corretude ------------------------- %.5lf seg\n", t_verificacao);
+
     double total = t_alocacao + t_preenchimento + t_sequencial + t_concorrente + t_merge + t_verificacao;
     printf("\nTaxa sequencial/concorrente: %.5lf\n", t_sequencial / (t_concorrente + t_merge));
-    printf("\nTempo total: %.5lf seg\n" COLOR_RESET, total);
+    char p = '%';
+    printf("Taxa merge/t_concorrente: %.2lf%c\n", t_merge / (t_concorrente + t_merge) * 100, p);
+    printf("\nTempo total: %.5lf seg\n\n\n" COLOR_RESET, total);
 
-    free(args); free(vetor); free(vetorSeq);
+    free(args); free(vetor); free(vetor_seq);
 
     return 0;
 }
