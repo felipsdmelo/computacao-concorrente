@@ -30,5 +30,3 @@ for processo in processos :
 fim = time.time()
 print("Todos os testes passaram")
 print("Tempo de execução dos testes: {:.5f} seg".format(fim - inicio))
-
-# testar com vetores ordenados e decrescentes
