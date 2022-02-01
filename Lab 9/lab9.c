@@ -66,9 +66,17 @@ int main() {
     pthread_create(tids_sistema + 4, NULL, t5, NULL);
     pthread_create(tids_sistema + 3, NULL, t4, NULL);
 
+    for (int i = 0 ; i < 5 ; i++) {
+        if (pthread_join(tids_sistema[i], NULL)) {
+            printf("Erro na funcao pthread_join()\n");
+            exit(1);
+        }
+    }
+    
     sem_destroy(&semaforo_1);
     sem_destroy(&semaforo_5);
     free(tids_sistema);
+    printf("\n");
 
     return 0;
 }
