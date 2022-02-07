@@ -3,12 +3,12 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-int var = 0; // variavel compartilhada entre as threads
 sem_t semaforo_5, semaforo_1;
 
 void *t1 (void *arg) {
-    while (var < 3)
-        sem_wait(&semaforo_1);
+    sem_wait(&semaforo_1);
+    sem_wait(&semaforo_1);
+    sem_wait(&semaforo_1);
     printf("(1) Volte sempre!\n");
     pthread_exit(NULL);
 }
@@ -17,7 +17,6 @@ void *t2 (void *arg) {
     // espera receber sinal da thread 5
     sem_wait(&semaforo_5);
     printf("(2) Fique a vontade.\n");
-    var++;
     sem_post(&semaforo_1);
     pthread_exit(NULL);
 }
@@ -26,7 +25,6 @@ void *t3 (void *arg) {
     // espera receber sinal da thread 5
     sem_wait(&semaforo_5);
     printf("(3) Sente-se por favor.\n");
-    var++;
     sem_post(&semaforo_1);
     pthread_exit(NULL);
 }
@@ -35,7 +33,6 @@ void *t4 (void *arg) {
     // espera receber sinal da thread 5
     sem_wait(&semaforo_5);
     printf("(4) Aceita um copo d'agua?\n");
-    var++;
     sem_post(&semaforo_1);
     pthread_exit(NULL);
 }

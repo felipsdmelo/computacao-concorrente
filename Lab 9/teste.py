@@ -12,6 +12,6 @@ qtd = int(sys.argv[1])
 inicio = time.time()
 with open("saida.txt", "w") as f :
     for i in range(qtd) :
-        processos.append(subprocess.run(["./lab9", str(qtd)], stdout=f))
+        processos.append(subprocess.run(["./lab9"], stdout=f))
 fim = time.time()
 print("Tempo de execução dos testes: {:.5f} seg".format(fim - inicio))
